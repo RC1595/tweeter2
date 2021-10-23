@@ -1,5 +1,7 @@
 import mariadb
+from flask import request
 import dbcreds
+from uuid import uuid4
 
 def connection():
     conn = None
@@ -22,3 +24,14 @@ def connection():
         print("connection closed")
         raise ConnectionError ("Could not establish a connection to the database")
     return (conn, cursor)
+
+
+def login(userId):
+    loginToken = uuid4().hex
+    (conn, cursor) = connection()
+    userId = cursor.execute('SELECT id FROM user WHERE username = ?', [request.json.get('username')])
+    cursor.execute('INSERT INTO user_session (login_token, user_id) VALUES (?, ?)', [loginToken, userId])
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return loginToken
